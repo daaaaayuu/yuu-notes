@@ -105,6 +105,17 @@ public class Student {
   @AssertFalse
   @Null
 
+4.使用@RequestBody時，要在該參數加上@Valid註解，才能讓這個calss裡的驗證請求參數生效
+  例如:public String create(@RequestBody @Valid Student student)
+5.使用@RequestParam、@RequestHeader、@PathVariable時，需要在Controller加上@Validated註解，才能夠讓驗證請求參數的註解生效
+  例如:@Validated
+       @RestController
+       public class StudentController
+       然後在方法加上@Min(100)等等的註解 public String read(@PathVariable @Min(100) Integer studentId)
+所以
+@RequestBody:在參數前面加上@Valid
+其餘三個:在Class加上@Validated
+
 
 
 
