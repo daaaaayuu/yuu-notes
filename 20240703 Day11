@@ -1,0 +1,21 @@
+每天花大概1小時左右學習微服務相關技術直到懶惰或學不動為止
+2024/07/03 Day11
+Spring Boot篇
+
+【Spring Data JPA】
+
+※Spring JDBC
+  在Spring Boot中執行"原始的SQL語法"，去操作資料庫
+  『開發效率低，效能較好，可寫出複雜的SQL』
+
+※Spring Data JPA
+  "使用ORM的概念"，透過操作Java Object的方式，去操作資料庫
+  ORM(Object-Relational Mapping):將"Java Object，去對應到資料庫的table"，所以對Java Object的操作就是對資料庫的操作
+  『開發效率高，效能較差，很難寫出複雜的查詢』
+  
+  JPA(Java Persistence API):
+     "定義"要如何操作資料庫
+     JPA提供了許多註解讓我們使用，像是@Entity、@Table、@Column......
+  Hibernate:
+     一種ORM框架，去"實作"JPA
+     負責自動生成SQL語法
