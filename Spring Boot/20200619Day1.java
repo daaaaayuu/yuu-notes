@@ -5,84 +5,31 @@ Spring Boot篇
 */
 
 
-//1.IOC(控制反轉)/DI(依賴注入)
-  IoC，即Inversion of Control
-  DI，即Dependency Injection
+//1.IoC(Inversion of Control控制反轉)/DI(Dependency Injection 依賴注入)
+將Object的控制權交給外部的Spring容器來管理
+原本做法:
+public class Teacher{
+   private Printer printer = new HpPrinter();
+	public void teach(){
+	   System.out.println("I'm a teacher");   
+	}
+}
+IoC:
+public class Teacher{
+   private Printer printer;
+	public void teach(){
+	   System.out.println("I'm a teacher");   
+	}
+}
+	
 
-//原本寫法:
-class Zoo {
-    Animal tiger;
-    Animal zebra;
-    public Zoo() {
-        tiger = new Tiger(); // 在Zoo裡面new
-        zebra = new Zebra(); // 在Zoo裡面new
-        tiger.eat();
-        zebra.eat();
-    }
-}
-interface Animal {
-    public void eat();
-}
-class Tiger implements Animal {
-    public void eat() {
-        System.out.println("老虎吃肉");
-    }
-}
-class Zebra implements Animal {
-    public void eat() {
-        System.out.println("斑馬吃草");
-    }
-}
-
-/*
-說明:
-※在Zoo裡new Tiger(), new Zebra()，這讓Zoo和Tiger,Zebra有了結合
-※Spring的設計目標之一是為了解隅，利用依賴抽象而非依賴實例的方式，因此設計了依賴注入(DI)
-*/
-
-//Spring Boot的寫法:
-class Zoo {
-    @Resource(name="tiger")
-    Animal tiger;
-
-    @Resource(name="zebra")
-    Animal zebra;
-
-    public Zoo() {
-        tiger.eat();
-        zebra.eat();
-    }
-}
-interface Animal {
-    public void eat();
-}
-@Component("tiger")
-class Tiger implements Animal {
-    public void eat() {
-        System.out.println("老虎吃肉");
-    }
-}
-@Component("zebra")
-class Zebra implements Animal {
-    public void eat() {
-        System.out.println("斑馬吃草");
-    }
-}
-
-/*
-說明:
-※只要宣告@Resource，不需再new Tiger(), new Zebra()，剩下的交給Spring完成。
-※只要在依賴實例的地方，Spring自動會new出來，並幫我們注入，稱依賴注入。並在不需要的時候，自動收回。
-※因為new的控制權從我們反轉(交給)Spring了，稱為控制反轉(IoC)
-※上述會常聽到：用DI來實現IoC
-*/
 簡單來說是一種將新建和管理的工作交給Spring容器，開發者只需要定義對象的依賴關係，而不需要關心創建與初始化過程。
 這樣讓程式更加模組化，並提高了程式的可維護性。
 基本創建bean:@Component
 初始化bean:@PostConstruct
 注入bean:@Autowired;如有多個同類的可以搭配@Qualifier
 
-II.AOP:切面導向設計，就是將共通邏輯寫在切面，由切面統一去處理
+//2.AOP:切面導向設計，就是將共通邏輯寫在切面，由切面統一去處理
 在class上加上@Aspect+Component就可以創建切面
 常搭配的註解有@Before、@After、@Around
 最常使用在權限驗證、統一的exception、Log紀錄
