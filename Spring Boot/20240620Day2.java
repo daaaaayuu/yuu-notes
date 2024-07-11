@@ -1,0 +1,122 @@
+/*有空時花大概1小時左右學習微服務相關技術直到懶惰或學不動為止
+2024/06/20 Day2
+Spring Boot篇
+*/
+
+//一.實作出RESTful API
+public class Student {
+    Integer id;
+    String name;
+}
+
+/*
+POST;/Students;Create(新增);創建一個新的Student
+GET;/Students/123;Read(查詢);查詢Student id為123的資訊
+PUT;/Students/123;Update(修改);更新Student id為123的資訊
+DELETE;/Students/123;Delete(刪除);刪除Student id為123的Student
+
+限制前端使用方法
+@PostMapping
+@GetMapping
+@PutMapping
+@DeleteMapping
+*/
+
+//1.POST方法
+//限制前端只能用POST方法
+
+  @RequestMapping(value = "/students", method = RequestMethod.POST)
+    public String create(@RequestBody Student student){
+        return "執行資料庫的 Create 操作";
+    }
+//或是這種方法，比較簡易
+    @PostMapping("/students")
+    public String create(@RequestBody Student student){
+        System.out.println("create: "+student.getId());
+        return "執行資料庫的 Create 操作";
+    }
+
+//2.GET方法
+    @GetMapping("/students/{studentId}")
+    public String read(@PathVariable Integer studentId){
+        return "執行資料庫的 Read 操作";
+    }
+//3.PUT方法
+    @PutMapping("students/{studentId}")
+    public String update(@PathVariable Integer studentId,
+                         @RequestBody String student){
+        return "執行資料庫的 Put 操作";
+    }
+//4.DELETE方法
+    @DeleteMapping("students/{studentId}")
+    public String delete(@PathVariable Integer studentId){
+        return "執行資料庫的 Delete 操作";
+    }
+/*
+二.intellij的endpoints(View -> Tool Windows -> endpoints)
+可以呈現這個project裡的所有url路徑
+
+三.驗證請求參數
+1.Spring Boot 2.3版本以後有使用驗證請求參數註解，需要設定
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+*/
+//2.一般檢查參數有沒有null
+    @PostMapping("/students")
+    public String create(@RequestBody Student student){
+        if(student.getId() == null){
+            throw  new RuntimeException("id 不可以為 null");
+        }
+        return "執行資料庫的 Create 操作";
+    }
+
+//3.Spring Boot的檢查參數有沒有null
+//在id上加上@NotNull
+public class Student {
+    @NotNull
+    Integer id;
+    String name;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+}
+//然後在在API方法加上@Valid
+    @PostMapping("/students")
+    public String create(@RequestBody @Valid Student student){
+        return "執行資料庫的 Create 操作";
+    }
+
+/*
+  還有其他(*代表常用)，要記的載入正確的package才能使用
+* @NotNul       不能為null
+* @NotBlank     不能為null，且不能為空白的字串，用在驗證String類型的參數上
+* @NotEmpty     不能為null，且size必須>0，用在驗證集合類型(List、Set、Map)的參數上
+  @Min(value)   值必須>=value，用在驗證數字類型的參數上
+  @Max(value)   值必須<=value，用在驗證數字類型的參數上
+  @Size(min,max)
+  @Email
+  @Pattern(regexp)
+  @Past
+  @Future
+  @AssertTrue
+  @AssertFalse
+  @Null
+
+4.使用@RequestBody時，要在該參數加上@Valid註解，才能讓這個calss裡的驗證請求參數生效
+  例如:public String create(@RequestBody @Valid Student student)
+5.使用@RequestParam、@RequestHeader、@PathVariable時，需要在Controller加上@Validated註解，才能夠讓驗證請求參數的註解生效
+  例如:@Validated
+       @RestController
+       public class StudentController
+       然後在方法加上@Min(100)等等的註解 public String read(@PathVariable @Min(100) Integer studentId)
+所以
+@RequestBody:在參數前面加上@Valid
+其餘三個:在Class加上@Validated
+*/
