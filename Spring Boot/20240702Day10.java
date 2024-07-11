@@ -1,0 +1,145 @@
+/*
+有空時花大概1小時左右學習微服務相關技術直到懶惰或學不動為止
+2024/07/02 Day10
+Spring Boot篇
+*/
+
+//一.Service與Dao的註解另一種用法
+前端 <=> Controller <=> Service <=> Dao <=> 資料庫DB
+寫法一:@RestController @Component @Component
+寫法二:@RestController @Service   @Repository
+以上Service與Dao使用的註解效果都一樣，都是產生一個Bean
+
+1.@Service:
+@Service
+public class StudentServiceImpl implements StudentService{
+
+2.@Repository:
+@Repository
+public class StudentDaoImpl implements StudentDao{
+
+//二.交易管理@Transactional
+※交易(Transaction)，是資料庫中的一種用法
+※可以在一個交易裡包含"多個資料庫操作"，這些資料庫操作，要嘛"一起成功"，要嘛"一起失敗"
+※交易失敗會rollback
+※用法加在class上或方法上(通常是加在方法上)
+※用途:使用"交易"來管理這個方法中的資料庫操作
+※通常是加在Service層，因為Service層才可以取得Dao的資料庫操作，又因為交易的本質是去管理多個資料庫的操作，要嘛"一起成功"，要嘛"一起失敗"，因此@Transactional通常使用在Service層上
+※需要滿足ACID特性的資料庫，才能夠執行交易管理(NOSQL可能就沒辦法使用)
+Atomicity 原子性
+Consistency 一致性
+Isolation 隔離性
+Durability 持久性
+
+@Component
+public class AccountServiceImpl implements AccountService {
+    
+    @Autowired
+    private AccountDao accountDao;
+    @Transactional
+    @Override
+    public void transfer(Integer fromAccountId, Integer toAccountId, Integer money) {
+
+        // User A 扣除轉帳金額
+        accountDao.decreaseMoney(fromAccountId, money);
+
+        // 失敗，噴出exception
+        Integer a = 1/0;
+
+        // User B 收到轉入金額
+        accountDao.addMoney(toAccountId, money);
+    }
+}
+
+//三.多個資料庫的連線設定與操作
+# 多個資料庫
+spring.datasource.test1.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.test1.jdbc-url=jdbc:mysql://localhost:3306/test1?serverTimezone=Asia/Taipei&characterEncoding=utf-8
+spring.datasource.test1.username=root
+spring.datasource.test1.password=springboot
+
+spring.datasource.test2.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.test2.jdbc-url=jdbc:mysql://localhost:3306/test2?serverTimezone=Asia/Taipei&characterEncoding=utf-8
+spring.datasource.test2.username=root
+spring.datasource.test2.password=springboot
+
+# 單個資料庫
+#spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+#spring.datasource.url=jdbc:mysql://localhost:3306/myjdbc?serverTimezone=Asia/Taipei&characterEncoding=utf-8
+#spring.datasource.username=root
+#spring.datasource.password=springboot
+
+/*
+1.datasource後面要加上要連到哪個資料庫
+2.URL的key要變jdbc-url跟單個不同
+3.會在新增一個連線設定的class，主要由prefix來指定哪個資料庫
+*/
+
+@Configuration
+public class DataSourceConfiguration {
+
+    // 連線到 test1 資料庫的 DataSource 和 NamedParameterJdbcTemplate
+    @Bean
+    @ConfigurationProperties(prefix = "spring.datasource.test1")
+    public DataSource test1DataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean
+    public NamedParameterJdbcTemplate test1JdbcTemplate(
+            @Qualifier("test1DataSource") DataSource dataSource) {
+        return new NamedParameterJdbcTemplate(dataSource);
+    }
+  
+//4.Controller注入test1JdbcTemplate與test2JdbcTemplate這兩個bean，因為都是使用NamedParameterJdbcTemplate，所以要使用@Qualifier來指定是載入哪個bean進來，不然會打架!!
+@RestController
+public class StudentController {
+
+    @Autowired
+    @Qualifier("test1JdbcTemplate")
+    private NamedParameterJdbcTemplate test1JdbcTemplate;
+
+    @Autowired
+    @Qualifier("test2JdbcTemplate")
+    private NamedParameterJdbcTemplate test2JdbcTemplate;
+
+
+    @PostMapping("/test1/students")
+    public String test1Insert(@RequestBody Student student) {
+        String sql = "INSERT INTO student(name) VALUE (:studentName)";
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("studentName", student.getName());
+
+        test1JdbcTemplate.update(sql, map);
+
+        return "插入數據到 test1 資料庫";
+    }
+
+    @PostMapping("/test2/students")
+    public String test2Insert(@RequestBody Student student) {
+        String sql = "INSERT INTO student(name) VALUE (:studentName)";
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("studentName", student.getName());
+
+        test2JdbcTemplate.update(sql, map);
+
+        return "插入數據到 test2 資料庫";
+    }
+}
+
+
+    // 連線到 test2 資料庫的 DataSource 和 NamedParameterJdbcTemplate
+    @Bean
+    @ConfigurationProperties(prefix = "spring.datasource.test2")
+    public DataSource test2DataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean
+    public NamedParameterJdbcTemplate test2JdbcTemplate(
+            @Qualifier("test2DataSource") DataSource dataSource) {
+        return new NamedParameterJdbcTemplate(dataSource);
+    }
+}
