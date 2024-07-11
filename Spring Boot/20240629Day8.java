@@ -1,0 +1,59 @@
+/*
+有空時花大概1小時左右學習微服務相關技術直到懶惰或學不動為止
+2024/06/29 Day8
+Spring Boot篇
+*/
+
+/*NamedParameterJdbcTemplate*/
+
+//一.query()
+『query(String sql, Map<String,Obiect> map, RowMapper<T> rowMapper)』
+※String sql:放要執行的sql語法
+※Map<String,Obiect> map:放sql語法裡面的變數的值
+※RowMapper<T> rowMapper:將資料庫查詢出來的數據，轉換成Java Object
+
+※在寫select sql時，不要使用*號※
+使用*號的缺點:
+1.花費額外的網路流量
+2.無法提升資料庫查詢的速度
+
+
+//二.RowMapper
+1.implements的RowMapper一定要是import org.springframework.jdbc.core.RowMapper
+2.用來將DB的資料庫格式轉換成Java語法，例如:List<Student> studentList
+3.方法返回值，一定要跟class梵行的值一樣
+
+public class StudentRowMapping implements RowMapper<Student> {
+    @Override
+    public Student mapRow(ResultSet rs, int rowNum) throws SQLException {
+
+//        //從資料庫中取得的數據
+//        Integer id = rs.getInt("id");
+//        String name = rs.getString("name");
+//
+//        //將數據轉為Java Object
+//        Student student = new Student();
+//        student.setId(id);
+//        student.setName(name);
+        
+        Student student = new Student();
+        student.setId(rs.getInt("id"));
+        student.setName(rs.getString("name"));
+        
+        return student;
+    }
+}
+
+//ResultSet rs:從資料庫中取得的數據
+//int rowNum:取到第幾筆資料
+
+
+    @GetMapping("/students")
+    public List<Student> select(){
+        String sql = "select id, name from student";
+        Map<String, Object> map = new HashMap<>();
+
+        List<Student> list = namedParameterJdbcTemplate.query(sql,map,new StudentRowMapping());
+        return list;
+    }
+
