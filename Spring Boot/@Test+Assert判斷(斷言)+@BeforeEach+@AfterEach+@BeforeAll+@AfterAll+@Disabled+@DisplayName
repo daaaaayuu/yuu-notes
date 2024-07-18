@@ -1,0 +1,158 @@
+>有空時花大概1小時左右學習微服務相關技術直到懶惰或學不動為止 2024/07/18 Day13
+
+**JUnit和Spring Boot的版本關係**  
+- Spring Boot版本<=2.1
+  - 使用JUnit4
+- Spring Boot版本2.2、2.3
+  - 使用JUnit4、JUnit5
+- Spring Boot版本>=2.4
+  - 使用JUnit5
+
+**pom.xml在test禁用JUnit4的方法**
+```html
+<exclusions>
+   <exclusion>
+     <groupId>org.junit.vintage</groupId>
+     <artifactId>junit-vintage-engine</artifactId>
+   </exclusion>
+</exclusions>
+```
+
+**一.`@Test`:加在方法上，可以生成一個單元測試**  
+- 只能加在test資料夾底下使用，可以將該方法變成可執行的test case
+- 方法為public void，並且沒有任何參數
+- 方法名稱可以隨意取，用來表達這個test case想測試哪個功能點，必須寫的清楚
+```java
+public class CalculatorTest {
+
+    @Test
+    public void add(){
+        Calculator calculator = new Calculator();
+        int result = calculator.add(1,2);
+
+        assertEquals(3,result);
+
+    }
+}
+```
+**二.Assert判斷(斷言)**  
+- 若是**不符合**assert判斷的預期結果，則**測試失敗**，以下為常用的Assert系列
+| Assert系列用法                   | 用途                                | 
+| ------------------------------- | ----------------------------------- | 
+| assertNull(A)                   | 判斷A為null                          |
+| assertNotNull(A)                | 判斷A不為null                        |
+| assertEquals(A,B)               | 判斷A和B相等，會使用equals()方法去判斷 |
+| assertTrue(A)                   | 判斷A為true                          |
+| assertFalse(A)                  | 判斷A為false                         |
+| assertThrows(exception, method) | 判斷執行method時，會噴出exception     |
+
+**assertThrows方法的範例:**  
+```java
+    @Test
+    public void divide(){
+       Calculator calculator = new Calculator();
+
+       assertThrows(ArithmeticException.class, () -> {
+           calculator.divide(1,0);
+       });
+    }
+```
+**三.其他註解用法**  
+***1. `@BeforeEach`***  
+- `@BeforeEach`:在每次`@Test`**開始前**，都會執行一次
+***2. `@AfterEach`***  
+- `@AfterEach`:在每次`@Test`**結束後**，都會執行一次
+```java
+public class MyTest {
+
+    @BeforeEach
+    public void beforeEach(){
+        System.out.println("執行 @BeforeEach");
+    }
+    @AfterEach
+    public void afterEach(){
+        System.out.println("執行 @AfterEach");
+    }
+    @Test
+    public void test1(){
+        System.out.println("執行 test1");
+    }
+    @Test
+    public void test2(){
+        System.out.println("執行 test2");
+    }
+}
+```
+![](https://github.com/daaaaayuu/yuu-notes/blob/main/image/BeforeEach%2BAfterEach.jpg)  
+
+***3. `@BeforeAll`***  
+- `@BeforeAll`:在所有`@Test`開始前執行一次
+***4. `@AfterAll`***  
+- `@AfterAll`:在所有`@Test`結束後執行一次
+上述兩個不常用，因為方法都必須為**public static void**，因為**static**的限制，
+就不能夠去存取Spring容器中的bean，所以無法對bean進行一些設定
+```java
+public class MyTest {
+
+    @BeforeEach
+    public void beforeEach(){
+        System.out.println("執行 @BeforeEach");
+    }
+    @AfterEach
+    public void afterEach(){
+        System.out.println("執行 @AfterEach");
+    }
+    @BeforeAll
+    public  static  void beforeAll(){
+        System.out.println("執行 @BeforeAll");
+    }
+    @AfterAll
+    public  static  void afterAll(){
+        System.out.println("執行  @AfterAll");
+    }
+
+
+    @Test
+    public void test1(){
+        System.out.println("執行 test1");
+    }
+    @Test
+    public void test2(){
+        System.out.println("執行 test2");
+    }
+}
+```
+![](https://github.com/daaaaayuu/yuu-notes/blob/main/image/BeforeAll%2BAfterAll.jpg)  
+
+***5. `@Disabled`***  
+- `@Disabled`:忽略該`@Test`不執行
+***6. `@DisplayName`***  
+- `@DisplayName`:自訂義顯示名稱
+```java
+public class CalculatorTest {
+
+    @Disabled
+    @Test
+    public void add(){
+        Calculator calculator = new Calculator();
+        int result = calculator.add(1,2);
+        assertNotNull(result);
+        assertEquals(3,result);
+        assertTrue(result>1);
+    }
+    @DisplayName("測試除法問題")
+    @Test
+    public void divide(){
+       Calculator calculator = new Calculator();
+       assertThrows(ArithmeticException.class, () -> {
+           calculator.divide(1,0);
+       });
+    }
+    
+}
+```
+![](https://github.com/daaaaayuu/yuu-notes/blob/main/image/Disabled%2BDisplayName.jpg)  
+
+**PS.以上範例都只是純粹的測試java程式**
+
+
